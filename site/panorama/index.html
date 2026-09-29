@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brno — panoramata</title>
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+  /* The observatory streams are 16:9, which is the shared default. A 2x2 of
+     16:9 cells is itself 16:9, so this fills a 16:9 display edge to edge. */
+  .grid { --cols: 2; --rows: 2; --ar-w: 16; --ar-h: 9; }
+  @media (max-width: 700px) { .grid { --cols: 1; --rows: 4; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/doprava/">Doprava</a>
+  <a href="/panorama/" aria-current="page">Panorama</a>
+</nav>
+
+<div class="grid" id="grid"></div>
+
+<script>
+// Hvězdárna a planetárium Brno runs four 24/7 horizon cameras on YouTube.
+// They are embedded as iframes: YouTube live streams cannot go through the
+// /hls/ proxy the traffic cameras use.
+const YOUTUBE = [
+  { id: "atakzXwhXVM", name: "Hvězdárna — sever" },
+  { id: "ryq2f01FWUg", name: "Hvězdárna — východ" },
+  { id: "XEKZCn4gCIU", name: "Hvězdárna — jih" },
+  { id: "JLQ9PgDsmNQ", name: "Hvězdárna — západ" },
+];
+
+const grid = document.getElementById("grid");
+
+YOUTUBE.forEach((cam) => {
+  const tile = document.createElement("div");
+  tile.className = "cam";
+  tile.dataset.state = "loading";
+
+  const status = document.createElement("div");
+  status.className = "status";
+  status.textContent = "spouštím přehrávač…";
+
+  const label = document.createElement("div");
+  label.className = "label";
+  const span = document.createElement("span");
+  span.textContent = cam.name;
+  label.appendChild(span);
+
+  const params = new URLSearchParams({
+    autoplay: "1", mute: "1", playsinline: "1",
+    // Controls stay on: an iframe swallows clicks, so a tile-level
+    // click-to-fullscreen cannot reach it. YouTube's own auto-hiding
+    // controls provide fullscreen and pause instead.
+    controls: "1", rel: "0", modestbranding: "1", iv_load_policy: "3",
+  });
+
+  const frame = document.createElement("iframe");
+  frame.src = `https://www.youtube-nocookie.com/embed/${cam.id}?${params}`;
+  frame.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+  frame.allowFullscreen = true;
+  frame.referrerPolicy = "origin-when-cross-origin";
+  frame.title = cam.name;
+  // Nothing cross-origin tells us playback began; clearing the status once the
+  // frame itself loads is the closest signal available.
+  frame.addEventListener("load", () => { tile.dataset.state = "playing"; });
+
+  tile.append(frame, status, label);
+  grid.appendChild(tile);
+});
+</script>
+<script src="/assets/kiosk.js"></script>
+</body>
+</html>

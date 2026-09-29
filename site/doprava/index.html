@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BKOM Brno — dopravní kamery</title>
+<link rel="stylesheet" href="/assets/theme.css">
+<style>
+  /* BKOM streams are 1024x640, i.e. 8:5 -- not 16:9. Cells take that exact
+     ratio so the whole frame shows with no cropping and no bars. */
+  .grid { --cols: 3; --rows: 3; --ar-w: 8; --ar-h: 5; }
+  @media (max-width: 760px) { .grid { --cols: 2; --rows: 5; } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="/doprava/" aria-current="page">Doprava</a>
+  <a href="/panorama/">Panorama</a>
+</nav>
+
+<div class="grid" id="grid"></div>
+
+<script>
+// Brněnské komunikace (BKOM) traffic cameras. `sid` is the upstream HLS id;
+// this is the complete set -- the CDN serves nothing beyond Eq9.
+const CAMERAS = [
+  { sid: "Gdvu1tX6Eq1", name: "Koliště × Milady Horákové" },
+  { sid: "Gdvu1tX6Eq2", name: "Rokytova × Svatoplukova" },
+  { sid: "Gdvu1tX6Eq3", name: "Nové sady × Poříčí" },
+  { sid: "Gdvu1tX6Eq4", name: "MÚK Hlinky" },
+  { sid: "Gdvu1tX6Eq5", name: "Karlova × Provazníkova" },
+  { sid: "Gdvu1tX6Eq6", name: "Tržní × Hladíkova" },
+  { sid: "Gdvu1tX6Eq7", name: "Husova × Joštova" },
+  { sid: "Gdvu1tX6Eq8", name: "Poříčí × Vídeňská" },
+  { sid: "Gdvu1tX6Eq9", name: "Úvoz × Tvrdého" },
+];
+</script>
+<script src="/assets/hls.min.js"></script>
+<script src="/assets/hls-grid.js"></script>
+<script src="/assets/kiosk.js"></script>
+</body>
+</html>

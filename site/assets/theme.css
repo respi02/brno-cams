@@ -1,0 +1,165 @@
+/* Shared theme for the Brno camera walls.
+   Tokens taken from base48.cz (css/variables.css, dark theme).
+
+   Rubik is vendored locally; latin-ext carries the Czech diacritics
+   (ř ž č ě š ť ů ň), latin the rest (á é í ú ý). */
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('rubik-latin-ext.woff2') format('woff2');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF,
+                 U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF,
+                 U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: 'Rubik';
+  font-style: normal;
+  font-weight: 400 600;
+  font-display: swap;
+  src: url('rubik-latin.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA,
+                 U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122,
+                 U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+:root {
+  --primary-color: #cb0000;
+  --background-color: #121212;
+  --text-color: #e0e0e0;
+  --section-bg: rgba(30, 30, 30, .8);
+  --border-radius: 4px;
+  --gap: 8px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;              /* never scroll */
+  background: var(--background-color);
+  font-family: 'Rubik', system-ui, sans-serif;
+  color: var(--text-color);
+}
+
+body {
+  display: grid;
+  place-items: center;
+  padding: var(--gap);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Nothing here is meant to be selected or tapped-highlighted on a wall. */
+.cam, .nav { -webkit-tap-highlight-color: transparent; }
+.cam .label { user-select: none; }
+
+/* Set once the mouse has been still for a few seconds (see kiosk.js). */
+body.idle { cursor: none; }
+body.idle .nav { opacity: 0; }
+
+/* Cells are sized to the stream's own aspect ratio rather than stretched to
+   fill the viewport, so nothing is ever cropped or letterboxed. The grid grows
+   as large as fits and body centres it. Pages set --cols / --rows / --ar-*. */
+.grid {
+  --cols: 3;
+  --rows: 3;
+  --ar-w: 16;                    /* the stream's aspect ratio */
+  --ar-h: 9;
+  /* Space left once outer padding and the gaps between cells are taken. */
+  --avail-h: calc(100dvh - var(--gap) * (var(--rows) + 1));
+  --avail-w: calc(100vw  - var(--gap) * (var(--cols) + 1));
+  /* Whichever axis runs out first decides the cell size. */
+  --cell-h: min(calc(var(--avail-h) / var(--rows)),
+                calc(var(--avail-w) / var(--cols) * var(--ar-h) / var(--ar-w)));
+  --cell-w: calc(var(--cell-h) * var(--ar-w) / var(--ar-h));
+
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell-w));
+  grid-template-rows: repeat(var(--rows), var(--cell-h));
+  gap: var(--gap);
+}
+@supports not (height: 100dvh) {
+  .grid { --avail-h: calc(100vh - var(--gap) * (var(--rows) + 1)); }
+}
+
+.cam {
+  position: relative;
+  min-width: 0; min-height: 0;   /* let grid tracks shrink freely */
+  background: var(--section-bg);
+  /* Drawn outside the layout box, so the content area keeps the cell's
+     exact aspect ratio and no hairline bars appear. */
+  box-shadow: 0 0 0 1px var(--primary-color);
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  cursor: pointer;
+}
+.cam video,
+.cam img,
+.cam iframe {
+  width: 100%; height: 100%;
+  display: block;
+  border: 0;
+  object-fit: contain;           /* never crop: show 100% of the frame */
+  background: #000;
+}
+
+/* Camera name: large, high-contrast, with base48's red accent bar. */
+.cam .label {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  padding: 28px 14px 12px;
+  background: linear-gradient(transparent, rgba(0, 0, 0, .85));
+  pointer-events: none;
+  display: flex; align-items: center; gap: 10px;
+  z-index: 2;
+}
+.cam .label::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 4px; height: 1.15em;
+  background: var(--primary-color);
+  border-radius: 1px;
+}
+.cam .label span {
+  font-size: clamp(15px, 1.45vw, 24px);
+  font-weight: 500;
+  line-height: 1.2;
+  color: #fff;
+  letter-spacing: .01em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, .95);
+}
+
+/* Status text, hidden once the stream plays. */
+.cam .status {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 0 12px;
+  font-size: 13px; color: #8b929d;
+  pointer-events: none;
+}
+.cam[data-state="playing"] .status { display: none; }
+.cam[data-state="error"] .status { color: var(--primary-color); }
+
+.cam:fullscreen video,
+.cam:fullscreen img { object-fit: contain; }
+
+/* Floating page switcher. Overlays the grid so it costs no layout space. */
+.nav {
+  position: fixed; top: var(--gap); right: var(--gap);
+  z-index: 10;
+  display: flex; gap: 1px;
+  border-radius: var(--border-radius);
+  overflow: hidden;
+  opacity: .5;
+  transition: opacity .4s ease;
+}
+.nav:hover { opacity: 1; }
+.nav a {
+  padding: 5px 11px;
+  font-size: 12px; font-weight: 500;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(0, 0, 0, .75);
+}
+.nav a[aria-current="page"] { background: var(--primary-color); }
